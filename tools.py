@@ -112,6 +112,38 @@ def list_directory_recursive(relative_path: str = "") -> list[dict]:
     scan_directory(resolved_target)
     return result
 
+def read_file(relative_path: str) -> str:
+    """
+    读取文件内容。
+
+    Args:
+        relative_path: 相对于根目录的文件路径
+
+    Returns:
+        文件内容
+    """
+    if not KB_ROOT:
+        raise ValueError("KB_ROOT environment variable not set")
+
+    base_path = Path(KB_ROOT)
+    target_path = base_path / relative_path
+
+    # 验证路径安全性
+    resolved_target = target_path.resolve()
+    resolved_base = base_path.resolve()
+
+    if not resolved_target.is_relative_to(resolved_base):
+        raise PermissionError("Access outside root directory is not allowed")
+
+    if not resolved_target.exists():
+        raise FileNotFoundError(f"File does not exist: {relative_path}")
+
+    if resolved_target.is_dir():
+        raise IsADirectoryError(f"Path is a directory, not a file: {relative_path}")
+
+    return resolved_target.read_text(encoding="utf-8")
+
+
 if __name__ == "__main__":
     # 测试列出根目录
     try:
